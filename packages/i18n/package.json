@@ -19,7 +19,7 @@
   "dependencies": {
     "@repo/contracts": "workspace:*",
     "i18next": "^25.0.1",
-    "react-i18next": "^15.4.1"
+    "react-i18next": "^17.0.13"
   },
   "peerDependencies": {
     "react": "^19.0.0"
