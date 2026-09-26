@@ -34,7 +34,7 @@
     "@vitejs/plugin-react": "^4.4.1",
     "eslint": "^9.25.1",
     "tailwindcss": "^4.1.4",
-    "typescript": "^5.8.3",
+    "typescript": "^6.0.3",
     "vite": "^6.3.2",
     "vitest": "^3.1.1"
   }
