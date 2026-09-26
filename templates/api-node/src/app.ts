@@ -11,8 +11,10 @@ import {
 } from "fastify-type-provider-zod";
 import type { Env } from "./env.js";
 import { appErrorHandler, sendApiError } from "./lib/errors.js";
+import { createMailer, type Mailer } from "./lib/mailer/index.js";
 import { requestIdPlugin } from "./lib/request-id.js";
 import {
+  authEmailTokenModel,
   authIdempotencyModel,
   authRefreshModel,
   authUserModel,
@@ -22,6 +24,12 @@ import {
 import { createAuthRoutes } from "./modules/auth/router/auth-router.js";
 import { createAuthService } from "./modules/auth/service/auth-service.js";
 import { healthRoutes } from "./modules/health/router/health-router.js";
+
+declare module "fastify" {
+  interface FastifyInstance {
+    mailer: Mailer;
+  }
+}
 
 export type BuildAppOptions = {
   rateLimit?: {
@@ -80,13 +88,30 @@ export async function buildApp(env: Env, options: BuildAppOptions = {}) {
       }),
   });
 
+  const mailer = createMailer({
+    env,
+    logger: {
+      info: (obj, msg) => app.log.info(obj, msg),
+      error: (obj, msg) => app.log.error(obj, msg),
+    },
+  });
+  app.decorate("mailer", mailer);
+
   const authService = createAuthService({
     users: authUserModel,
     refresh: authRefreshModel,
+    emailTokens: authEmailTokenModel,
     idempotency: authIdempotencyModel,
     uow: createPrismaAuthUnitOfWork(),
     isUniqueViolation: isPrismaUniqueViolation,
     jwtSecret: env.JWT_SECRET,
+    appPublicUrl: env.APP_PUBLIC_URL,
+    verifyEmailTtlMinutes: env.AUTH_VERIFY_EMAIL_TTL_MINUTES,
+    resetPasswordTtlMinutes: env.AUTH_RESET_PASSWORD_TTL_MINUTES,
+    mailer,
+    logger: {
+      error: (obj, msg) => app.log.error(obj, msg),
+    },
   });
 
   await app.register(healthRoutes);

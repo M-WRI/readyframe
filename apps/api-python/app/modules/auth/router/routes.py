@@ -6,7 +6,19 @@ from fastapi import APIRouter, Cookie, Depends, Request, Response
 from slowapi import Limiter
 from slowapi.util import get_remote_address
 
-from app.lib.contracts_models import AuthSessionResponse, LoginRequest, RegisterRequest
+from app.lib.contracts_models import (
+    AuthEmailActionResponse,
+    AuthSessionResponse,
+    EmailTokenInspectRequest,
+    EmailTokenInspectResponse,
+    ForgotPasswordRequest,
+    LoginRequest,
+    RegisterRequest,
+    ResendVerificationRequest,
+    ResetPasswordRequest,
+    VerifyEmailRequest,
+    VerifyEmailResponse,
+)
 from app.lib.cookies import clear_auth_cookies, set_auth_cookies
 from app.lib.db import SettingsDep
 from app.lib.tokens import ACCESS_COOKIE, REFRESH_COOKIE
@@ -113,3 +125,58 @@ def me(
     access_token: str | None = Cookie(default=None, alias=ACCESS_COOKIE),
 ) -> AuthSessionResponse:
     return service.me(access_token)
+
+
+@router.post("/email-token/inspect")
+@limiter.limit(_auth_rate_limit)
+def inspect_email_token(
+    request: Request,
+    body: EmailTokenInspectRequest,
+    service: AuthServiceDep,
+) -> EmailTokenInspectResponse:
+    _ = request
+    return service.inspect_email_token(token=body.token, purpose=body.purpose)
+
+
+@router.post("/verify-email")
+@limiter.limit(_auth_rate_limit)
+def verify_email(
+    request: Request,
+    body: VerifyEmailRequest,
+    service: AuthServiceDep,
+) -> VerifyEmailResponse:
+    _ = request
+    return service.verify_email(body)
+
+
+@router.post("/resend-verification")
+@limiter.limit(_auth_rate_limit)
+def resend_verification(
+    request: Request,
+    body: ResendVerificationRequest,
+    service: AuthServiceDep,
+) -> AuthEmailActionResponse:
+    _ = request
+    return service.resend_verification(body)
+
+
+@router.post("/forgot-password")
+@limiter.limit(_auth_rate_limit)
+def forgot_password(
+    request: Request,
+    body: ForgotPasswordRequest,
+    service: AuthServiceDep,
+) -> AuthEmailActionResponse:
+    _ = request
+    return service.forgot_password(body)
+
+
+@router.post("/reset-password")
+@limiter.limit(_auth_rate_limit)
+def reset_password(
+    request: Request,
+    body: ResetPasswordRequest,
+    service: AuthServiceDep,
+) -> AuthEmailActionResponse:
+    _ = request
+    return service.reset_password(body)

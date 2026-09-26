@@ -21,6 +21,10 @@ def create_refresh_token_value() -> str:
     return secrets.token_urlsafe(48)
 
 
+def create_email_token_value() -> str:
+    return secrets.token_urlsafe(32)
+
+
 def sign_access_token(
     *,
     sub: str,

@@ -1,6 +1,12 @@
 import { SignJWT } from "jose";
 import { describe, expect, it } from "vitest";
-import { hashToken, signAccessToken, verifyAccessToken } from "./tokens.js";
+import {
+  createEmailTokenValue,
+  createRefreshTokenValue,
+  hashToken,
+  signAccessToken,
+  verifyAccessToken,
+} from "./tokens.js";
 
 describe("tokens", () => {
   const secret = "test-secret-min-32-characters-long!!";
@@ -10,6 +16,14 @@ describe("tokens", () => {
     const payload = await verifyAccessToken(token, secret);
     expect(payload).toEqual({ sub: "user-1", email: "a@b.co", role: "user" });
     expect(hashToken("abc")).toHaveLength(64);
+  });
+
+  it("creates opaque refresh and email token values", () => {
+    const refresh = createRefreshTokenValue();
+    const email = createEmailTokenValue();
+    expect(refresh.length).toBeGreaterThan(40);
+    expect(email.length).toBeGreaterThan(20);
+    expect(createEmailTokenValue()).not.toBe(email);
   });
 
   it("rejects invalid access token payloads", async () => {

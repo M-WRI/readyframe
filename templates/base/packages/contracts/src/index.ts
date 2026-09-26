@@ -18,16 +18,36 @@ export {
 } from "./error/normalize-api-error.js";
 
 export {
+  type AuthEmailActionResponse,
+  type AuthEmailTokenPurpose,
+  type AuthEmailTokenStatus,
   type AuthSessionResponse,
   type AuthUser,
+  authEmailActionResponseSchema,
+  authEmailTokenPurposeSchema,
+  authEmailTokenStatusSchema,
   authSessionResponseSchema,
   authUserSchema,
+  type EmailTokenInspectRequest,
+  type EmailTokenInspectResponse,
+  emailTokenInspectRequestSchema,
+  emailTokenInspectResponseSchema,
+  type ForgotPasswordRequest,
+  forgotPasswordRequestSchema,
   type LoginRequest,
   loginRequestSchema,
   type MeResponse,
   meResponseSchema,
   type RegisterRequest,
   registerRequestSchema,
+  type ResendVerificationRequest,
+  resendVerificationRequestSchema,
+  type ResetPasswordRequest,
+  resetPasswordRequestSchema,
+  type VerifyEmailRequest,
+  type VerifyEmailResponse,
+  verifyEmailRequestSchema,
+  verifyEmailResponseSchema,
 } from "./auth/schemas.js";
 
 export {

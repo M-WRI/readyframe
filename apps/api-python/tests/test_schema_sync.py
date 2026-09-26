@@ -271,6 +271,8 @@ def test_login_request_invalid(payload: dict[str, object]) -> None:
                 "id": VALID_UUID,
                 "email": "a@example.com",
                 "role": "user",
+                "emailVerifiedAt": None,
+                "pendingEmail": None,
                 "createdAt": VALID_CREATED_AT,
             },
         ),
@@ -279,16 +281,20 @@ def test_login_request_invalid(payload: dict[str, object]) -> None:
                 "id": VALID_UUID,
                 "email": "admin@example.com",
                 "role": "admin",
+                "emailVerifiedAt": "2026-06-15T12:30:00+00:00",
+                "pendingEmail": "pending@example.com",
                 "createdAt": "2026-06-15T12:30:00+00:00",
             },
         ),
     ],
 )
-def test_auth_user_valid(payload: dict[str, str]) -> None:
+def test_auth_user_valid(payload: dict[str, object]) -> None:
     user = AuthUser.model_validate(payload)
     dumped = user.model_dump(by_alias=True, mode="json")
     assert dumped["id"] == VALID_UUID
     assert "createdAt" in dumped
+    assert "emailVerifiedAt" in dumped
+    assert "pendingEmail" in dumped
     assert "created_at" not in dumped
 
 
@@ -300,6 +306,8 @@ def test_auth_user_valid(payload: dict[str, str]) -> None:
                 "id": "not-a-uuid",
                 "email": "a@example.com",
                 "role": "user",
+                "emailVerifiedAt": None,
+                "pendingEmail": None,
                 "createdAt": VALID_CREATED_AT,
             },
         ),
@@ -308,6 +316,8 @@ def test_auth_user_valid(payload: dict[str, str]) -> None:
                 "id": VALID_UUID,
                 "email": "a@example.com",
                 "role": "user",
+                "emailVerifiedAt": None,
+                "pendingEmail": None,
                 "createdAt": "2026-01-01T00:00:00",
             },
         ),
@@ -316,6 +326,8 @@ def test_auth_user_valid(payload: dict[str, str]) -> None:
                 "id": VALID_UUID,
                 "email": "not-email",
                 "role": "user",
+                "emailVerifiedAt": None,
+                "pendingEmail": None,
                 "createdAt": VALID_CREATED_AT,
             },
         ),
@@ -324,6 +336,8 @@ def test_auth_user_valid(payload: dict[str, str]) -> None:
                 "id": VALID_UUID,
                 "email": "a@example.com",
                 "role": "superuser",
+                "emailVerifiedAt": None,
+                "pendingEmail": None,
                 "createdAt": VALID_CREATED_AT,
             },
         ),
@@ -332,6 +346,8 @@ def test_auth_user_valid(payload: dict[str, str]) -> None:
                 "id": VALID_UUID,
                 "email": "a@example.com",
                 "role": "user",
+                "emailVerifiedAt": None,
+                "pendingEmail": None,
                 "createdAt": VALID_CREATED_AT,
                 "extra": True,
             },

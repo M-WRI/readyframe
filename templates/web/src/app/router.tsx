@@ -3,6 +3,10 @@ import { translateApiError } from "@repo/i18n";
 import { Button } from "@repo/ui";
 import { useTranslation } from "react-i18next";
 import { Link, Navigate, Route, Routes, useNavigate } from "react-router";
+import { CheckEmailPage } from "../modules/authEmail/pages/checkEmailPage/CheckEmailPage.js";
+import { ForgotPasswordPage } from "../modules/authEmail/pages/forgotPasswordPage/ForgotPasswordPage.js";
+import { ResetPasswordPage } from "../modules/authEmail/pages/resetPasswordPage/ResetPasswordPage.js";
+import { VerifyEmailPage } from "../modules/authEmail/pages/verifyEmailPage/VerifyEmailPage.js";
 
 function HomePage() {
   const { t } = useTranslation();
@@ -67,7 +71,7 @@ function SignInRoute() {
 
 function SignUpRoute() {
   const navigate = useNavigate();
-  return <SignUpPage onSuccess={() => void navigate("/")} signInTo="/sign-in" />;
+  return <SignUpPage onSuccess={() => void navigate("/check-email")} signInTo="/sign-in" />;
 }
 
 export function AppRouter() {
@@ -76,6 +80,10 @@ export function AppRouter() {
       <Route path="/" element={<HomePage />} />
       <Route path="/sign-in" element={<SignInRoute />} />
       <Route path="/sign-up" element={<SignUpRoute />} />
+      <Route path="/check-email" element={<CheckEmailPage />} />
+      <Route path="/verify-email" element={<VerifyEmailPage />} />
+      <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+      <Route path="/reset-password" element={<ResetPasswordPage />} />
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   );

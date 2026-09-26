@@ -12,13 +12,21 @@ enum UserRole {
   admin
 }
 
+enum AuthEmailTokenType {
+  email_verify
+  password_reset
+}
+
 model User {
-  id           String           @id @default(uuid())
-  email        String           @unique
-  passwordHash String
-  role         UserRole         @default(user)
-  createdAt    DateTime         @default(now())
+  id              String           @id @default(uuid())
+  email           String           @unique
+  passwordHash    String
+  role            UserRole         @default(user)
+  emailVerifiedAt DateTime?
+  pendingEmail    String?
+  createdAt       DateTime         @default(now())
   refreshSessions RefreshSession[]
+  authEmailTokens AuthEmailToken[]
 }
 
 model RefreshSession {
@@ -30,6 +38,19 @@ model RefreshSession {
   createdAt DateTime @default(now())
 
   @@index([userId])
+}
+
+model AuthEmailToken {
+  id        String             @id @default(uuid())
+  userId    String
+  user      User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type      AuthEmailTokenType
+  tokenHash String             @unique
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime           @default(now())
+
+  @@index([userId, type])
 }
 
 model IdempotencyRecord {

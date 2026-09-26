@@ -19,6 +19,10 @@ export function createRefreshTokenValue(): string {
   return randomBytes(48).toString("base64url");
 }
 
+export function createEmailTokenValue(): string {
+  return randomBytes(32).toString("base64url");
+}
+
 export async function signAccessToken(
   payload: AccessTokenPayload,
   secret: string,

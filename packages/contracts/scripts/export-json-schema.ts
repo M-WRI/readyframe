@@ -4,11 +4,19 @@ import { fileURLToPath } from "node:url";
 import { zodToJsonSchema } from "zod-to-json-schema";
 import {
   apiErrorSchema,
+  authEmailActionResponseSchema,
   authSessionResponseSchema,
   authUserSchema,
+  emailTokenInspectRequestSchema,
+  emailTokenInspectResponseSchema,
+  forgotPasswordRequestSchema,
   loginRequestSchema,
   registerRequestSchema,
+  resendVerificationRequestSchema,
+  resetPasswordRequestSchema,
   userRoleSchema,
+  verifyEmailRequestSchema,
+  verifyEmailResponseSchema,
 } from "../src/index.ts";
 
 const rootDir = join(dirname(fileURLToPath(import.meta.url)), "..");
@@ -37,6 +45,38 @@ const document = {
     AuthSessionResponse: zodToJsonSchema(authSessionResponseSchema, {
       $refStrategy: "none",
       name: "AuthSessionResponse",
+    }),
+    EmailTokenInspectRequest: zodToJsonSchema(emailTokenInspectRequestSchema, {
+      $refStrategy: "none",
+      name: "EmailTokenInspectRequest",
+    }),
+    EmailTokenInspectResponse: zodToJsonSchema(emailTokenInspectResponseSchema, {
+      $refStrategy: "none",
+      name: "EmailTokenInspectResponse",
+    }),
+    VerifyEmailRequest: zodToJsonSchema(verifyEmailRequestSchema, {
+      $refStrategy: "none",
+      name: "VerifyEmailRequest",
+    }),
+    VerifyEmailResponse: zodToJsonSchema(verifyEmailResponseSchema, {
+      $refStrategy: "none",
+      name: "VerifyEmailResponse",
+    }),
+    ResendVerificationRequest: zodToJsonSchema(resendVerificationRequestSchema, {
+      $refStrategy: "none",
+      name: "ResendVerificationRequest",
+    }),
+    ForgotPasswordRequest: zodToJsonSchema(forgotPasswordRequestSchema, {
+      $refStrategy: "none",
+      name: "ForgotPasswordRequest",
+    }),
+    AuthEmailActionResponse: zodToJsonSchema(authEmailActionResponseSchema, {
+      $refStrategy: "none",
+      name: "AuthEmailActionResponse",
+    }),
+    ResetPasswordRequest: zodToJsonSchema(resetPasswordRequestSchema, {
+      $refStrategy: "none",
+      name: "ResetPasswordRequest",
     }),
   },
 };

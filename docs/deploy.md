@@ -59,11 +59,12 @@ Node and Python backends share the same Postgres table layout; run **one** API a
 ## Secrets (never commit)
 
 - `DATABASE_URL`
-- `JWT_SECRET` (min length enforced at API boot in later steps)
+- `JWT_SECRET` (min length enforced at API boot)
 - `POSTGRES_PASSWORD` (compose/prod)
+- `BREVO_API_KEY` (when `BREVO_ENABLED=true`)
 - Cookie / CORS settings only if you deviate from same-origin
 
-Use GitHub Environments + host secret stores.
+See root [`.env.example`](../.env.example) for Brevo + auth email TTL placeholders. Feature docs: [`features/email-brevo.md`](features/email-brevo.md), [`features/auth-email.md`](features/auth-email.md).
 
 ## Readiness (later steps)
 

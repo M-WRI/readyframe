@@ -34,10 +34,18 @@ from typing import Any
 
 from app.lib.contracts_models import (
     ApiError,
+    AuthEmailActionResponse,
     AuthSessionResponse,
     AuthUser,
+    EmailTokenInspectRequest,
+    EmailTokenInspectResponse,
+    ForgotPasswordRequest,
     LoginRequest,
     RegisterRequest,
+    ResendVerificationRequest,
+    ResetPasswordRequest,
+    VerifyEmailRequest,
+    VerifyEmailResponse,
 )
 
 ROOT = Path(__file__).resolve().parents[3]
@@ -81,6 +89,14 @@ MODEL_CHECKS: list[tuple[str, type]] = [
     ("LoginRequest", LoginRequest),
     ("AuthUser", AuthUser),
     ("AuthSessionResponse", AuthSessionResponse),
+    ("EmailTokenInspectRequest", EmailTokenInspectRequest),
+    ("EmailTokenInspectResponse", EmailTokenInspectResponse),
+    ("VerifyEmailRequest", VerifyEmailRequest),
+    ("VerifyEmailResponse", VerifyEmailResponse),
+    ("ResendVerificationRequest", ResendVerificationRequest),
+    ("ForgotPasswordRequest", ForgotPasswordRequest),
+    ("AuthEmailActionResponse", AuthEmailActionResponse),
+    ("ResetPasswordRequest", ResetPasswordRequest),
 ]
 
 

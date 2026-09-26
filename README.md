@@ -105,6 +105,7 @@ Generated apps include **one** backend only, plus `.cursor/rules` and specialize
 
 | Version | Date | Key features |
 |---------|------|----------------|
+| **1.4.0** | 2026-09-26 | Brevo transactional email + auth verify/reset (dual-backend), `.env.example` Brevo/TTL vars, auth email web pages |
 | **1.3.0** | 2026-09-09 | Expand fail-rubric + agent guidance (cache isolation, pagination completeness, idempotency scoping, dual-backend drift) |
 | **1.2.0** | 2026-09-09 | Rebrand to **readyframe** / `create-readyframe` (GitHub + npm) |
 | **1.1.0** | 2026-09-08 | Quality hardening: credential-bound idempotent register, atomic register/refresh transactions, ApiError-shaped HTTP (429/404/405/400), semantic contract schema sync (UUID/date-time AuthUser), auth UI field/network errors + ≥80% coverage scope, isolated Postgres HTTP/DB regression tests, strict BCP-47 locale validation, create-app TS/lint isolation from packed templates, fail-rubric ↔ CI mapping, single-track generated rules/agents |
@@ -143,7 +144,7 @@ After changing apps/packages/root config: `pnpm templates:sync`.
 
 CI enforces format, lint, typecheck, coverage floors, axe, build (no prod sourcemaps), contract drift, templates sync, generator smoke, and Python Ruff/mypy/pytest.
 
-Defaults: httpOnly cookies only; `/api/v1`; request-id; auth rate limits; Idempotency-Key on register; roles `user` \| `admin`. See [`.env.example`](.env.example), [`docs/architecture.md`](docs/architecture.md), and [`docs/deploy.md`](docs/deploy.md).
+Defaults: httpOnly cookies only; `/api/v1`; request-id; auth rate limits; Idempotency-Key on register; roles `user` \| `admin`. Brevo verify/reset: [`docs/features/`](docs/features/). See [`.env.example`](.env.example), [`docs/architecture.md`](docs/architecture.md), and [`docs/deploy.md`](docs/deploy.md).
 
 ## Publish the CLI
 

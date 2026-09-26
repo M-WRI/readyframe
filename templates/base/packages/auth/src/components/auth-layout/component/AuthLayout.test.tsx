@@ -21,7 +21,8 @@ describe("auth pages and layout", () => {
     await renderWithAuth(<SignInPage />);
     expect(screen.getByRole("heading", { name: "Sign in" })).toBeTruthy();
     expect(screen.getByLabelText("Email")).toBeTruthy();
-    expect(screen.getByText("Need an account?")).toBeTruthy();
+    expect(screen.getByText(/Need an account/)).toBeTruthy();
+    expect(screen.getByRole("link", { name: "Forgot password?" })).toBeTruthy();
   });
 
   it("renders SignUpPage copy and form", async () => {

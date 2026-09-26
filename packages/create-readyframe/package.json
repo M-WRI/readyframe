@@ -1,6 +1,6 @@
 {
   "name": "create-readyframe",
-  "version": "1.3.0",
+  "version": "1.4.0",
   "description": "Scaffold a production-minded monorepo (Vite React + Fastify or FastAPI)",
   "type": "module",
   "license": "MIT",

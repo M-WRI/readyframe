@@ -27,6 +27,7 @@ describe("auth DB atomicity (quality DB)", () => {
 
   beforeEach(async () => {
     await prisma.idempotencyRecord.deleteMany();
+    await prisma.authEmailToken.deleteMany();
     await prisma.refreshSession.deleteMany();
     await prisma.user.deleteMany();
   });
@@ -35,10 +36,14 @@ describe("auth DB atomicity (quality DB)", () => {
     return createAuthService({
       users: models.authUserModel,
       refresh: models.authRefreshModel,
+      emailTokens: models.authEmailTokenModel,
       idempotency: models.authIdempotencyModel,
       uow: models.createPrismaAuthUnitOfWork(),
       isUniqueViolation: models.isPrismaUniqueViolation,
       jwtSecret,
+      appPublicUrl: "http://localhost:5173",
+      verifyEmailTtlMinutes: 60,
+      resetPasswordTtlMinutes: 30,
     });
   }
 
@@ -83,10 +88,16 @@ describe("auth DB atomicity (quality DB)", () => {
   });
 
   it("injected failure mid-register rolls back the transaction", async () => {
-    const { createAuthUserModel, createAuthRefreshModel, createAuthIdempotencyModel } = models;
+    const {
+      createAuthUserModel,
+      createAuthRefreshModel,
+      createAuthEmailTokenModel,
+      createAuthIdempotencyModel,
+    } = models;
     const auth = createAuthService({
       users: models.authUserModel,
       refresh: models.authRefreshModel,
+      emailTokens: models.authEmailTokenModel,
       idempotency: models.authIdempotencyModel,
       uow: {
         run(fn) {
@@ -94,6 +105,7 @@ describe("auth DB atomicity (quality DB)", () => {
             fn({
               users: createAuthUserModel(tx),
               refresh: createAuthRefreshModel(tx),
+              emailTokens: createAuthEmailTokenModel(tx),
               idempotency: {
                 findByKey: (key) => createAuthIdempotencyModel(tx).findByKey(key),
                 async create() {
@@ -106,6 +118,9 @@ describe("auth DB atomicity (quality DB)", () => {
       },
       isUniqueViolation: models.isPrismaUniqueViolation,
       jwtSecret,
+      appPublicUrl: "http://localhost:5173",
+      verifyEmailTtlMinutes: 60,
+      resetPasswordTtlMinutes: 30,
     });
 
     await expect(
@@ -114,6 +129,7 @@ describe("auth DB atomicity (quality DB)", () => {
 
     expect(await prisma.user.count()).toBe(0);
     expect(await prisma.refreshSession.count()).toBe(0);
+    expect(await prisma.authEmailToken.count()).toBe(0);
     expect(await prisma.idempotencyRecord.count()).toBe(0);
   });
 });

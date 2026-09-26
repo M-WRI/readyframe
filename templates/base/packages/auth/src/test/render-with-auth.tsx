@@ -12,6 +12,8 @@ export const sessionUser = {
   id: "11111111-1111-4111-8111-111111111111",
   email: "a@b.co",
   role: "user" as const,
+  emailVerifiedAt: null,
+  pendingEmail: null,
   createdAt: "2026-01-01T00:00:00.000Z",
 };
 
@@ -22,6 +24,11 @@ export function createMockAuthClient(overrides: Partial<AuthApiClient> = {}): Au
     logout: vi.fn(),
     refresh: vi.fn(),
     me: vi.fn(),
+    inspectEmailToken: vi.fn(),
+    verifyEmail: vi.fn(),
+    resendVerification: vi.fn(),
+    forgotPassword: vi.fn(),
+    resetPassword: vi.fn(),
     ...overrides,
   };
 }

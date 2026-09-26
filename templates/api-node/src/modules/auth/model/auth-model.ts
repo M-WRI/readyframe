@@ -1,6 +1,8 @@
 import { Prisma, type PrismaClient } from "@prisma/client";
 import { prisma } from "../../../lib/prisma.js";
 import type {
+  AuthEmailTokenStore,
+  AuthEmailTokenType,
   AuthIdempotencyStore,
   AuthRefreshStore,
   AuthStores,
@@ -15,6 +17,9 @@ export function createAuthUserModel(db: DbClient): AuthUserStore {
     findByEmail(email: string) {
       return db.user.findUnique({ where: { email } });
     },
+    findByPendingEmail(email: string) {
+      return db.user.findFirst({ where: { pendingEmail: email } });
+    },
     findById(id: string) {
       return db.user.findUnique({ where: { id } });
     },
@@ -23,6 +28,41 @@ export function createAuthUserModel(db: DbClient): AuthUserStore {
         data: {
           email: input.email,
           passwordHash: input.passwordHash,
+        },
+      });
+    },
+    setEmailVerifiedAt(userId: string, verifiedAt: Date) {
+      return db.user.update({
+        where: { id: userId },
+        data: { emailVerifiedAt: verifiedAt },
+      });
+    },
+    setPasswordHash(userId: string, passwordHash: string) {
+      return db.user.update({
+        where: { id: userId },
+        data: { passwordHash },
+      });
+    },
+    setPendingEmail(userId: string, pendingEmail: string | null) {
+      return db.user.update({
+        where: { id: userId },
+        data: { pendingEmail },
+      });
+    },
+    async applyPendingEmail(userId: string, verifiedAt: Date) {
+      const user = await db.user.findUnique({ where: { id: userId } });
+      if (!user?.pendingEmail) {
+        return db.user.update({
+          where: { id: userId },
+          data: { emailVerifiedAt: verifiedAt },
+        });
+      }
+      return db.user.update({
+        where: { id: userId },
+        data: {
+          email: user.pendingEmail,
+          pendingEmail: null,
+          emailVerifiedAt: verifiedAt,
         },
       });
     },
@@ -57,6 +97,57 @@ export function createAuthRefreshModel(db: DbClient): AuthRefreshStore {
     deleteByHash(tokenHash: string) {
       return db.refreshSession.deleteMany({ where: { tokenHash } });
     },
+    deleteAllForUser(userId: string) {
+      return db.refreshSession.deleteMany({ where: { userId } });
+    },
+  };
+}
+
+export function createAuthEmailTokenModel(db: DbClient): AuthEmailTokenStore {
+  return {
+    async create(input: {
+      userId: string;
+      type: AuthEmailTokenType;
+      tokenHash: string;
+      expiresAt: Date;
+    }) {
+      const row = await db.authEmailToken.create({
+        data: input,
+        include: { user: true },
+      });
+      return row;
+    },
+    findByHash(tokenHash: string) {
+      return db.authEmailToken.findUnique({
+        where: { tokenHash },
+        include: { user: true },
+      });
+    },
+    deleteUnusedForUserType(userId: string, type: AuthEmailTokenType) {
+      return db.authEmailToken.deleteMany({
+        where: { userId, type, usedAt: null },
+      });
+    },
+    async markUsed(id: string, usedAt: Date) {
+      const existing = await db.authEmailToken.findUnique({
+        where: { id },
+        include: { user: true },
+      });
+      if (!existing || existing.usedAt) {
+        return null;
+      }
+      const updated = await db.authEmailToken.updateMany({
+        where: { id, usedAt: null },
+        data: { usedAt },
+      });
+      if (updated.count !== 1) {
+        return null;
+      }
+      return db.authEmailToken.findUnique({
+        where: { id },
+        include: { user: true },
+      });
+    },
   };
 }
 
@@ -87,6 +178,7 @@ export function createAuthIdempotencyModel(db: DbClient): AuthIdempotencyStore {
 
 export const authUserModel = createAuthUserModel(prisma);
 export const authRefreshModel = createAuthRefreshModel(prisma);
+export const authEmailTokenModel = createAuthEmailTokenModel(prisma);
 export const authIdempotencyModel = createAuthIdempotencyModel(prisma);
 
 export function createPrismaAuthUnitOfWork(client: PrismaClient = prisma): AuthUnitOfWork {
@@ -96,6 +188,7 @@ export function createPrismaAuthUnitOfWork(client: PrismaClient = prisma): AuthU
         fn({
           users: createAuthUserModel(tx),
           refresh: createAuthRefreshModel(tx),
+          emailTokens: createAuthEmailTokenModel(tx),
           idempotency: createAuthIdempotencyModel(tx),
         }),
       );

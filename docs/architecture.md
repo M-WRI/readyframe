@@ -59,6 +59,7 @@ API surface conventions: `/api/v1/...`, `x-request-id`, redacted logs, global + 
 - Auth forms, provider, and guards live in `@repo/auth` (not ad-hoc page logic)  
 - User-facing copy goes through `@repo/i18n`  
 - On login / logout / identity-changing refresh, clear prior-account React Query caches so private data cannot leak across users  
+- Transactional email (Brevo) for verify/reset — see [`docs/features/email-brevo.md`](features/email-brevo.md) and [`docs/features/auth-email.md`](features/auth-email.md)
 
 ## Generator vs this repo
 

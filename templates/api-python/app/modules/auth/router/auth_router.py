@@ -12,8 +12,10 @@ from app.lib.contracts_catalog import (
 )
 from app.lib.db import SessionDep, SettingsDep
 from app.lib.errors import AppError
+from app.lib.mailer import create_mailer
 from app.lib.tokens import ACCESS_COOKIE, verify_access_token
 from app.modules.auth.model.auth_store import (
+    SqlAuthEmailTokenStore,
     SqlAuthIdempotencyStore,
     SqlAuthRefreshStore,
     SqlAuthUserStore,
@@ -25,9 +27,14 @@ def get_auth_service(session: SessionDep, settings: SettingsDep) -> AuthService:
     return create_auth_service(
         users=SqlAuthUserStore(session),
         refresh=SqlAuthRefreshStore(session),
+        email_tokens=SqlAuthEmailTokenStore(session),
         idempotency=SqlAuthIdempotencyStore(session),
         jwt_secret=settings.jwt_secret,
+        app_public_url=settings.app_public_url,
+        verify_email_ttl_minutes=settings.auth_verify_email_ttl_minutes,
+        reset_password_ttl_minutes=settings.auth_reset_password_ttl_minutes,
         recover=session.rollback,
+        mailer=create_mailer(env=settings),
     )
 
 

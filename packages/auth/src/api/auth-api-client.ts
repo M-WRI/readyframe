@@ -1,14 +1,31 @@
 import {
   type ApiError,
+  type AuthEmailActionResponse,
   type AuthSessionResponse,
+  type EmailTokenInspectRequest,
+  type EmailTokenInspectResponse,
+  type ForgotPasswordRequest,
   IDEMPOTENCY_KEY_HEADER,
   type LoginRequest,
   type RegisterRequest,
+  type ResendVerificationRequest,
+  type ResetPasswordRequest,
+  type VerifyEmailRequest,
+  type VerifyEmailResponse,
+  authEmailActionResponseSchema,
   authSessionResponseSchema,
+  emailTokenInspectRequestSchema,
+  emailTokenInspectResponseSchema,
+  forgotPasswordRequestSchema,
   loginRequestSchema,
   normalizeApiError,
   registerRequestSchema,
+  resendVerificationRequestSchema,
+  resetPasswordRequestSchema,
+  verifyEmailRequestSchema,
+  verifyEmailResponseSchema,
 } from "@repo/contracts";
+import { AUTH_ROUTES } from "../constants/auth-constants.js";
 
 export type ApiClientOptions = {
   baseUrl?: string;
@@ -77,7 +94,7 @@ export function createAuthApiClient(options: ApiClientOptions = {}) {
   return {
     register(input: RegisterRequest, idempotencyKey: string) {
       const payload = registerRequestSchema.parse(input);
-      return request("/api/v1/auth/register", {
+      return request(AUTH_ROUTES.register, {
         method: "POST",
         body: JSON.stringify(payload),
         headers: { [IDEMPOTENCY_KEY_HEADER]: idempotencyKey },
@@ -86,25 +103,65 @@ export function createAuthApiClient(options: ApiClientOptions = {}) {
     },
     login(input: LoginRequest) {
       const payload = loginRequestSchema.parse(input);
-      return request("/api/v1/auth/login", {
+      return request(AUTH_ROUTES.login, {
         method: "POST",
         body: JSON.stringify(payload),
         schema: authSessionResponseSchema,
       });
     },
     logout() {
-      return request<void>("/api/v1/auth/logout", { method: "POST" });
+      return request<void>(AUTH_ROUTES.logout, { method: "POST" });
     },
     refresh() {
-      return request<AuthSessionResponse | undefined>("/api/v1/auth/refresh", {
+      return request<AuthSessionResponse | undefined>(AUTH_ROUTES.refresh, {
         method: "POST",
         schema: authSessionResponseSchema,
       });
     },
     me() {
-      return request("/api/v1/auth/me", {
+      return request(AUTH_ROUTES.me, {
         method: "GET",
         schema: authSessionResponseSchema,
+      });
+    },
+    inspectEmailToken(input: EmailTokenInspectRequest): Promise<EmailTokenInspectResponse> {
+      const payload = emailTokenInspectRequestSchema.parse(input);
+      return request(AUTH_ROUTES.emailTokenInspect, {
+        method: "POST",
+        body: JSON.stringify(payload),
+        schema: emailTokenInspectResponseSchema,
+      });
+    },
+    verifyEmail(input: VerifyEmailRequest): Promise<VerifyEmailResponse> {
+      const payload = verifyEmailRequestSchema.parse(input);
+      return request(AUTH_ROUTES.verifyEmail, {
+        method: "POST",
+        body: JSON.stringify(payload),
+        schema: verifyEmailResponseSchema,
+      });
+    },
+    resendVerification(input: ResendVerificationRequest): Promise<AuthEmailActionResponse> {
+      const payload = resendVerificationRequestSchema.parse(input);
+      return request(AUTH_ROUTES.resendVerification, {
+        method: "POST",
+        body: JSON.stringify(payload),
+        schema: authEmailActionResponseSchema,
+      });
+    },
+    forgotPassword(input: ForgotPasswordRequest): Promise<AuthEmailActionResponse> {
+      const payload = forgotPasswordRequestSchema.parse(input);
+      return request(AUTH_ROUTES.forgotPassword, {
+        method: "POST",
+        body: JSON.stringify(payload),
+        schema: authEmailActionResponseSchema,
+      });
+    },
+    resetPassword(input: ResetPasswordRequest): Promise<AuthEmailActionResponse> {
+      const payload = resetPasswordRequestSchema.parse(input);
+      return request(AUTH_ROUTES.resetPassword, {
+        method: "POST",
+        body: JSON.stringify(payload),
+        schema: authEmailActionResponseSchema,
       });
     },
   };

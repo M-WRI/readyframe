@@ -1,8 +1,13 @@
 import {
   IDEMPOTENCY_KEY_HEADER,
+  emailTokenInspectRequestSchema,
+  forgotPasswordRequestSchema,
   isValidIdempotencyKey,
   loginRequestSchema,
   registerRequestSchema,
+  resendVerificationRequestSchema,
+  resetPasswordRequestSchema,
+  verifyEmailRequestSchema,
 } from "@repo/contracts";
 import type { FastifyReply, FastifyRequest } from "fastify";
 import { clearAuthCookies, setAuthCookies } from "../../../lib/cookies.js";
@@ -43,6 +48,36 @@ export function createAuthController(service: AuthService, options: { cookieSecu
     async me(request: FastifyRequest, reply: FastifyReply) {
       const session = await service.me(request.cookies[ACCESS_COOKIE]);
       return reply.send(session);
+    },
+
+    async inspectEmailToken(request: FastifyRequest, reply: FastifyReply) {
+      const body = emailTokenInspectRequestSchema.parse(request.body);
+      const result = await service.inspectEmailToken(body);
+      return reply.send(result);
+    },
+
+    async verifyEmail(request: FastifyRequest, reply: FastifyReply) {
+      const body = verifyEmailRequestSchema.parse(request.body);
+      const result = await service.verifyEmail(body);
+      return reply.send(result);
+    },
+
+    async resendVerification(request: FastifyRequest, reply: FastifyReply) {
+      const body = resendVerificationRequestSchema.parse(request.body);
+      const result = await service.resendVerification(body);
+      return reply.send(result);
+    },
+
+    async forgotPassword(request: FastifyRequest, reply: FastifyReply) {
+      const body = forgotPasswordRequestSchema.parse(request.body);
+      const result = await service.forgotPassword(body);
+      return reply.send(result);
+    },
+
+    async resetPassword(request: FastifyRequest, reply: FastifyReply) {
+      const body = resetPasswordRequestSchema.parse(request.body);
+      const result = await service.resetPassword(body);
+      return reply.send(result);
     },
   };
 }

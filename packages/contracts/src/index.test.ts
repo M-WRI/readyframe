@@ -9,10 +9,14 @@ import {
   hasRequiredRole,
   isApiError,
   isValidIdempotencyKey,
+  authUserSchema,
+  emailTokenInspectRequestSchema,
   loginRequestSchema,
   normalizeApiError,
   parseApiError,
   registerRequestSchema,
+  resetPasswordRequestSchema,
+  verifyEmailResponseSchema,
 } from "./index.js";
 
 describe("apiErrorSchema", () => {
@@ -107,6 +111,29 @@ describe("auth schemas", () => {
     expect(registerRequestSchema.safeParse({ email: "a@b.co", password: "short" }).success).toBe(
       false,
     );
+  });
+
+  it("validates auth email DTOs and user verification fields", () => {
+    expect(
+      emailTokenInspectRequestSchema.parse({
+        token: "abc",
+        purpose: "email_verify",
+      }),
+    ).toEqual({ token: "abc", purpose: "email_verify" });
+    expect(verifyEmailResponseSchema.parse({ verified: true })).toEqual({ verified: true });
+    expect(resetPasswordRequestSchema.safeParse({ token: "t", password: "short" }).success).toBe(
+      false,
+    );
+    expect(
+      authUserSchema.parse({
+        id: "11111111-1111-4111-8111-111111111111",
+        email: "a@b.co",
+        role: "user",
+        emailVerifiedAt: null,
+        pendingEmail: "new@b.co",
+        createdAt: "2026-01-01T00:00:00.000Z",
+      }),
+    ).toMatchObject({ pendingEmail: "new@b.co", emailVerifiedAt: null });
   });
 });
 

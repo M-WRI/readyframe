@@ -34,5 +34,11 @@ export function createAuthRoutes(options: {
     app.post("/api/v1/auth/logout", controller.logout);
     app.post("/api/v1/auth/refresh", controller.refresh);
     app.get("/api/v1/auth/me", { preHandler: requireAuth }, controller.me);
+
+    app.post("/api/v1/auth/email-token/inspect", authRateLimit, controller.inspectEmailToken);
+    app.post("/api/v1/auth/verify-email", authRateLimit, controller.verifyEmail);
+    app.post("/api/v1/auth/resend-verification", authRateLimit, controller.resendVerification);
+    app.post("/api/v1/auth/forgot-password", authRateLimit, controller.forgotPassword);
+    app.post("/api/v1/auth/reset-password", authRateLimit, controller.resetPassword);
   };
 }

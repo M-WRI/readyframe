@@ -44,11 +44,18 @@ def client(quality_url: str):
 @pytest.fixture(autouse=True)
 def _clean_tables(quality_url: str):
     from app.lib.db import get_engine, reset_engine
-    from app.modules.auth.model.auth_model import IdempotencyRecord, RefreshSession, User
+    from app.modules.auth.model.auth_model import (
+        AuthEmailToken,
+        IdempotencyRecord,
+        RefreshSession,
+        User,
+    )
 
     reset_engine()
     os.environ["DATABASE_URL"] = quality_url
     with Session(get_engine()) as session:
+        for row in session.exec(select(AuthEmailToken)).all():
+            session.delete(row)
         for row in session.exec(select(IdempotencyRecord)).all():
             session.delete(row)
         for row in session.exec(select(RefreshSession)).all():
@@ -129,9 +136,11 @@ def test_bad_request_malformed_json(client: TestClient):
 
 def test_rate_limited_api_error(quality_url: str):
     os.environ["DATABASE_URL"] = quality_url
+    os.environ.setdefault("JWT_SECRET", "quality-test-secret-min-32-chars!!")
     from app.env import Settings
     from app.lib.db import reset_engine
     from app.main import create_app
+    from app.modules.auth.router.routes import set_auth_rate_limit
 
     reset_engine()
     settings = Settings(  # type: ignore[call-arg]
@@ -142,15 +151,18 @@ def test_rate_limited_api_error(quality_url: str):
         NODE_ENV="test",
     )
     app = create_app(settings, rate_limit_default="1000/minute", auth_rate_limit="3/minute")
-    with TestClient(app) as limited:
-        results = [
-            limited.post(
-                "/api/v1/auth/login",
-                json={"email": f"rl{i}@example.com", "password": "password123"},
-            )
-            for i in range(5)
-        ]
-    reset_engine()
+    try:
+        with TestClient(app) as limited:
+            results = [
+                limited.post(
+                    "/api/v1/auth/login",
+                    json={"email": f"rl{i}@example.com", "password": "password123"},
+                )
+                for i in range(5)
+            ]
+    finally:
+        set_auth_rate_limit("10000/minute")
+        reset_engine()
     limited_res = next((r for r in results if r.status_code == 429), None)
     assert limited_res is not None
     assert limited_res.json()["errorCode"] == "RATE_LIMITED"
@@ -188,3 +200,75 @@ def test_refresh_single_use(client: TestClient):
         a, b = list(pool.map(lambda _: refresh_once(), range(2)))
 
     assert sorted([a.status_code, b.status_code]) == [200, 401]
+
+
+def test_email_token_inspect_verify_and_forgot(client: TestClient, quality_url: str):
+    from datetime import UTC, datetime, timedelta
+
+    from app.lib.db import get_engine, reset_engine
+    from app.lib.tokens import hash_token
+    from app.modules.auth.model.auth_model import AuthEmailToken, AuthEmailTokenType, User
+    from app.modules.auth.router.routes import set_auth_rate_limit
+    from sqlmodel import Session, select
+
+    set_auth_rate_limit("10000/minute")
+    client.cookies.clear()
+
+    registered = client.post(
+        "/api/v1/auth/register",
+        json={"email": "verify@example.com", "password": "password123"},
+        headers={"Idempotency-Key": "verify-reg"},
+    )
+    assert registered.status_code == 201
+    body = registered.json()
+    assert body["user"]["emailVerifiedAt"] is None
+    assert body["user"]["pendingEmail"] is None
+
+    reset_engine()
+    os.environ["DATABASE_URL"] = quality_url
+    os.environ.setdefault("JWT_SECRET", "quality-test-secret-min-32-chars!!")
+    with Session(get_engine()) as session:
+        user = session.exec(select(User).where(User.email == "verify@example.com")).one()
+        for row in session.exec(
+            select(AuthEmailToken).where(AuthEmailToken.user_id == user.id)
+        ).all():
+            session.delete(row)
+        raw = "http-verify-token-raw-value-01"
+        session.add(
+            AuthEmailToken(
+                user_id=user.id,
+                type=AuthEmailTokenType.email_verify,
+                token_hash=hash_token(raw),
+                expires_at=datetime.now(UTC).replace(tzinfo=None) + timedelta(hours=1),
+            )
+        )
+        session.commit()
+
+    inspect = client.post(
+        "/api/v1/auth/email-token/inspect",
+        json={"token": raw, "purpose": "email_verify"},
+    )
+    assert inspect.status_code == 200
+    assert inspect.json() == {"status": "valid"}
+
+    verify = client.post("/api/v1/auth/verify-email", json={"token": raw})
+    assert verify.status_code == 200
+    assert verify.json() == {"verified": True}
+
+    used = client.post("/api/v1/auth/verify-email", json={"token": raw})
+    assert used.status_code == 409
+    assert used.json()["errorCode"] == "AUTH_TOKEN_USED"
+
+    forgot = client.post(
+        "/api/v1/auth/forgot-password",
+        json={"email": "nobody@example.com"},
+    )
+    assert forgot.status_code == 200
+    assert forgot.json() == {"ok": True}
+
+    resend = client.post(
+        "/api/v1/auth/resend-verification",
+        json={"email": "nobody@example.com"},
+    )
+    assert resend.status_code == 200
+    assert resend.json() == {"ok": True}

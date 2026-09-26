@@ -126,6 +126,29 @@
                 "admin"
               ]
             },
+            "emailVerifiedAt": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "date-time"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "pendingEmail": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "email",
+                  "maxLength": 320
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
             "createdAt": {
               "type": "string",
               "format": "date-time"
@@ -135,6 +158,8 @@
             "id",
             "email",
             "role",
+            "emailVerifiedAt",
+            "pendingEmail",
             "createdAt"
           ],
           "additionalProperties": false
@@ -167,6 +192,29 @@
                     "admin"
                   ]
                 },
+                "emailVerifiedAt": {
+                  "anyOf": [
+                    {
+                      "type": "string",
+                      "format": "date-time"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "pendingEmail": {
+                  "anyOf": [
+                    {
+                      "type": "string",
+                      "format": "email",
+                      "maxLength": 320
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
                 "createdAt": {
                   "type": "string",
                   "format": "date-time"
@@ -176,6 +224,8 @@
                 "id",
                 "email",
                 "role",
+                "emailVerifiedAt",
+                "pendingEmail",
                 "createdAt"
               ],
               "additionalProperties": false
@@ -183,6 +233,182 @@
           },
           "required": [
             "user"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "EmailTokenInspectRequest": {
+      "$ref": "#/definitions/EmailTokenInspectRequest",
+      "definitions": {
+        "EmailTokenInspectRequest": {
+          "type": "object",
+          "properties": {
+            "token": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 512
+            },
+            "purpose": {
+              "type": "string",
+              "enum": [
+                "email_verify",
+                "password_reset"
+              ]
+            }
+          },
+          "required": [
+            "token",
+            "purpose"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "EmailTokenInspectResponse": {
+      "$ref": "#/definitions/EmailTokenInspectResponse",
+      "definitions": {
+        "EmailTokenInspectResponse": {
+          "type": "object",
+          "properties": {
+            "status": {
+              "type": "string",
+              "enum": [
+                "valid",
+                "used",
+                "expired",
+                "invalid"
+              ]
+            }
+          },
+          "required": [
+            "status"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "VerifyEmailRequest": {
+      "$ref": "#/definitions/VerifyEmailRequest",
+      "definitions": {
+        "VerifyEmailRequest": {
+          "type": "object",
+          "properties": {
+            "token": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 512
+            }
+          },
+          "required": [
+            "token"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "VerifyEmailResponse": {
+      "$ref": "#/definitions/VerifyEmailResponse",
+      "definitions": {
+        "VerifyEmailResponse": {
+          "type": "object",
+          "properties": {
+            "verified": {
+              "type": "boolean",
+              "const": true
+            }
+          },
+          "required": [
+            "verified"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "ResendVerificationRequest": {
+      "$ref": "#/definitions/ResendVerificationRequest",
+      "definitions": {
+        "ResendVerificationRequest": {
+          "type": "object",
+          "properties": {
+            "email": {
+              "type": "string",
+              "format": "email",
+              "maxLength": 320
+            }
+          },
+          "required": [
+            "email"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "ForgotPasswordRequest": {
+      "$ref": "#/definitions/ForgotPasswordRequest",
+      "definitions": {
+        "ForgotPasswordRequest": {
+          "type": "object",
+          "properties": {
+            "email": {
+              "type": "string",
+              "format": "email",
+              "maxLength": 320
+            }
+          },
+          "required": [
+            "email"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "AuthEmailActionResponse": {
+      "$ref": "#/definitions/AuthEmailActionResponse",
+      "definitions": {
+        "AuthEmailActionResponse": {
+          "type": "object",
+          "properties": {
+            "ok": {
+              "type": "boolean",
+              "const": true
+            }
+          },
+          "required": [
+            "ok"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "ResetPasswordRequest": {
+      "$ref": "#/definitions/ResetPasswordRequest",
+      "definitions": {
+        "ResetPasswordRequest": {
+          "type": "object",
+          "properties": {
+            "token": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 512
+            },
+            "password": {
+              "type": "string",
+              "minLength": 8,
+              "maxLength": 128
+            }
+          },
+          "required": [
+            "token",
+            "password"
           ],
           "additionalProperties": false
         }

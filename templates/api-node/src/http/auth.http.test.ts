@@ -49,6 +49,7 @@ describe("auth HTTP (quality DB)", () => {
 
   beforeEach(async () => {
     await prisma.idempotencyRecord.deleteMany();
+    await prisma.authEmailToken.deleteMany();
     await prisma.refreshSession.deleteMany();
     await prisma.user.deleteMany();
   });
@@ -197,5 +198,66 @@ describe("auth HTTP (quality DB)", () => {
     } finally {
       await limitedApp.close();
     }
+  });
+
+  it("inspects and verifies email tokens with distinct error codes", async () => {
+    const register = await app.inject({
+      method: "POST",
+      url: "/api/v1/auth/register",
+      payload: { email: "verify@example.com", password: "password123" },
+      headers: { "idempotency-key": "verify-reg" },
+    });
+    expect(register.statusCode).toBe(201);
+    expect(register.json().user.emailVerifiedAt).toBeNull();
+    expect(register.json().user.pendingEmail).toBeNull();
+
+    const user = await prisma.user.findUniqueOrThrow({ where: { email: "verify@example.com" } });
+    const tokenRow = await prisma.authEmailToken.findFirstOrThrow({
+      where: { userId: user.id, type: "email_verify", usedAt: null },
+    });
+    // Cannot recover raw token from hash — issue a known raw token for HTTP assert
+    const { hashToken } = await import("../lib/tokens.js");
+    const raw = "http-verify-token-raw-value-01";
+    await prisma.authEmailToken.delete({ where: { id: tokenRow.id } });
+    await prisma.authEmailToken.create({
+      data: {
+        userId: user.id,
+        type: "email_verify",
+        tokenHash: hashToken(raw),
+        expiresAt: new Date(Date.now() + 60 * 60 * 1000),
+      },
+    });
+
+    const inspect = await app.inject({
+      method: "POST",
+      url: "/api/v1/auth/email-token/inspect",
+      payload: { token: raw, purpose: "email_verify" },
+    });
+    expect(inspect.statusCode).toBe(200);
+    expect(inspect.json()).toEqual({ status: "valid" });
+
+    const verify = await app.inject({
+      method: "POST",
+      url: "/api/v1/auth/verify-email",
+      payload: { token: raw },
+    });
+    expect(verify.statusCode).toBe(200);
+    expect(verify.json()).toEqual({ verified: true });
+
+    const used = await app.inject({
+      method: "POST",
+      url: "/api/v1/auth/verify-email",
+      payload: { token: raw },
+    });
+    expect(used.statusCode).toBe(409);
+    expect(used.json()).toMatchObject({ errorCode: "AUTH_TOKEN_USED" });
+
+    const forgot = await app.inject({
+      method: "POST",
+      url: "/api/v1/auth/forgot-password",
+      payload: { email: "nobody@example.com" },
+    });
+    expect(forgot.statusCode).toBe(200);
+    expect(forgot.json()).toEqual({ ok: true });
   });
 });

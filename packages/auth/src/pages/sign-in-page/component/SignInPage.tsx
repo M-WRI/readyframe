@@ -6,9 +6,14 @@ import { SignInForm } from "../../../components/sign-in-form/index.js";
 export type SignInPageProps = {
   onSuccess?: () => void;
   signUpTo?: string;
+  forgotPasswordTo?: string;
 };
 
-export function SignInPage({ onSuccess, signUpTo = "/sign-up" }: SignInPageProps) {
+export function SignInPage({
+  onSuccess,
+  signUpTo = "/sign-up",
+  forgotPasswordTo = "/forgot-password",
+}: SignInPageProps) {
   const { t } = useTranslation();
   return (
     <AuthLayout
@@ -18,6 +23,10 @@ export function SignInPage({ onSuccess, signUpTo = "/sign-up" }: SignInPageProps
           {t("auth.noAccount")}{" "}
           <Link className="underline" to={signUpTo}>
             {t("auth.goToSignUp")}
+          </Link>
+          {" · "}
+          <Link className="underline" to={forgotPasswordTo}>
+            {t("auth.forgotPasswordLink")}
           </Link>
         </p>
       }
